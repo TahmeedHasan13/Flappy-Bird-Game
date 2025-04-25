@@ -18,7 +18,6 @@
     .container {
       display: flex;
       align-items: flex-start;
-      justify-content: center;
       gap: 30px;
     }
 
@@ -86,13 +85,5 @@
     const pipeWidth = 50;
     const pipeGap = 150;
     const pipeSpeed = 2;
-    const pipeSpacing = 200;  // Add spacing between pipes
+    const pipeSpacing = 300;  // Pipe spacing increased
 
-    function drawBird() {
-      ctx.fillStyle = "#FFD700";
-      ctx.fillRect(50, birdY, birdWidth, birdHeight);
-    }
-
-    function drawPipes() {
-      pipes.forEach((pipe, index) => {
-        ctx.fillStyle = "#32
