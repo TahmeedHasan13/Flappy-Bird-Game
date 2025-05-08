@@ -35,127 +35,84 @@
   <div id="gameOverText" style="display:none;">Game Over! Press Space to Restart</div>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
 
-    const bird = {
-      x: 50,
-      y: canvas.height / 2,
-      width: 20,
-      height: 20,
-      speed: 0,
-      gravity: 0.5,
-      jump: -8
-    };
+  const bird = {
+    x: 50,
+    y: canvas.height / 2,
+    width: 20,
+    height: 20,
+    speed: 0,
+    gravity: 0.5,
+    jump: -8
+  };
 
-    const pipes = [];
-    const pipeWidth = 50;
-    const pipeGap = 120;
-    const pipeSpeed = 2;
-    const pipeSpacing = 200;
+  const pipes = [];
+  const pipeWidth = 50;
+  const pipeGap = 120;
+  const pipeSpeed = 2;
+  const minPipeDistance = 180; // Minimum horizontal distance between pipes
+  const maxPipeY = canvas.height - pipeGap - 50;
+  const minPipeY = 50;
 
-    let frame = 0;
-    let isGameOver = false;
+  let isGameOver = false;
+  let lastPipeX = 0;
 
-    function drawBird() {
-      ctx.fillStyle = "yellow";
-      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+  function drawBird() {
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+  }
+
+  function drawPipes() {
+    ctx.fillStyle = "green";
+    for (let pipe of pipes) {
+      // Top pipe
+      ctx.fillRect(pipe.x, 0, pipeWidth, pipe.gapY);
+      // Bottom pipe
+      ctx.fillRect(pipe.x, pipe.gapY + pipeGap, pipeWidth, canvas.height - pipe.gapY - pipeGap);
+    }
+  }
+
+  function updatePipes() {
+    // Move pipes left
+    for (let pipe of pipes) {
+      pipe.x -= pipeSpeed;
     }
 
-    function drawPipes() {
-      ctx.fillStyle = "green";
-      for (let pipe of pipes) {
-        // Top pipe
-        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.gapY);
-        // Bottom pipe
-        ctx.fillRect(pipe.x, pipe.gapY + pipeGap, pipeWidth, canvas.height - pipe.gapY - pipeGap);
-      }
+    // Remove off-screen pipes
+    if (pipes.length && pipes[0].x + pipeWidth < 0) {
+      pipes.shift();
     }
 
-    function updatePipes() {
-      for (let pipe of pipes) {
-        pipe.x -= pipeSpeed;
-      }
-
-      // Add new pipe
-      if (frame % pipeSpacing === 0) {
-        const gapY = Math.floor(Math.random() * (canvas.height - pipeGap - 100)) + 50;
-        pipes.push({ x: canvas.width, gapY });
-      }
-
-      // Remove off-screen pipes
-      if (pipes.length && pipes[0].x + pipeWidth < 0) {
-        pipes.shift();
-      }
+    // Add new pipe only if the last pipe is far enough
+    if (pipes.length === 0 || canvas.width - lastPipeX >= minPipeDistance) {
+      const gapY = Math.floor(Math.random() * (maxPipeY - minPipeY)) + minPipeY;
+      pipes.push({ x: canvas.width, gapY });
+      lastPipeX = canvas.width;
     }
+  }
 
-    function checkCollision() {
-      // Ground or ceiling
-      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+  function checkCollision() {
+    if (bird.y + bird.height > canvas.height || bird.y < 0) return true;
+
+    for (let pipe of pipes) {
+      if (
+        bird.x < pipe.x + pipeWidth &&
+        bird.x + bird.width > pipe.x &&
+        (bird.y < pipe.gapY || bird.y + bird.height > pipe.gapY + pipeGap)
+      ) {
         return true;
       }
-
-      // Pipes
-      for (let pipe of pipes) {
-        if (
-          bird.x < pipe.x + pipeWidth &&
-          bird.x + bird.width > pipe.x &&
-          (
-            bird.y < pipe.gapY ||
-            bird.y + bird.height > pipe.gapY + pipeGap
-          )
-        ) {
-          return true;
-        }
-      }
-
-      return false;
     }
 
-    function gameOver() {
-      isGameOver = true;
-      document.getElementById("gameOverText").style.display = "block";
-    }
+    return false;
+  }
 
-    function gameLoop() {
-      if (isGameOver) return;
+  function gameOver() {
+    isGameOver = true;
+    document.getElementById
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Bird physics
-      bird.speed += bird.gravity;
-      bird.y += bird.speed;
-
-      drawBird();
-      drawPipes();
-      updatePipes();
-
-      if (checkCollision()) {
-        gameOver();
-      } else {
-        frame++;
-        requestAnimationFrame(gameLoop);
-      }
-    }
-
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        if (isGameOver) {
-          // Reset game
-          bird.y = canvas.height / 2;
-          bird.speed = 0;
-          pipes.length = 0;
-          frame = 0;
-          isGameOver = false;
-          document.getElementById("gameOverText").style.display = "none";
-          gameLoop();
-        } else {
-          bird.speed = bird.jump;
-        }
-      }
-    });
-
-    gameLoop();
   </script>
 </body>
 </html>
